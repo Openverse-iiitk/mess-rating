@@ -37,7 +37,7 @@ export type Database = {
       ratings: {
         Row: {
           id: string
-          user_email: string
+          user_hash: string
           dish_name: string
           meal_type: 'breakfast' | 'lunch' | 'snacks' | 'dinner'
           rating: number
@@ -46,7 +46,7 @@ export type Database = {
         }
         Insert: {
           id?: string
-          user_email: string
+          user_hash: string
           dish_name: string
           meal_type: 'breakfast' | 'lunch' | 'snacks' | 'dinner'
           rating: number
@@ -55,7 +55,7 @@ export type Database = {
         }
         Update: {
           id?: string
-          user_email?: string
+          user_hash?: string
           dish_name?: string
           meal_type?: 'breakfast' | 'lunch' | 'snacks' | 'dinner'
           rating?: number

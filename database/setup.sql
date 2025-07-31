@@ -11,16 +11,16 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create ratings table
+-- Create ratings table with anonymous voting support
 CREATE TABLE IF NOT EXISTS ratings (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_email TEXT NOT NULL,
+  user_hash TEXT NOT NULL, -- Hash of user email + dish + meal + date to prevent duplicate votes
   dish_name TEXT NOT NULL,
   meal_type TEXT CHECK (meal_type IN ('breakfast', 'lunch', 'snacks', 'dinner')) NOT NULL,
   rating INTEGER CHECK (rating >= 1 AND rating <= 10) NOT NULL,
   date DATE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_email, dish_name, meal_type, date)
+  UNIQUE(user_hash, dish_name, meal_type, date)
 );
 
 -- Create menu_items table (optional - for dynamic menu management)
@@ -107,7 +107,7 @@ ON CONFLICT DO NOTHING;
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON user_profiles(email);
 CREATE INDEX IF NOT EXISTS idx_ratings_dish_meal_date ON ratings(dish_name, meal_type, date);
-CREATE INDEX IF NOT EXISTS idx_ratings_user_date ON ratings(user_email, date);
+CREATE INDEX IF NOT EXISTS idx_ratings_user_hash ON ratings(user_hash);
 CREATE INDEX IF NOT EXISTS idx_menu_items_date_meal ON menu_items(date, meal_type);
 
 -- Create a view for easy rating statistics

@@ -5,6 +5,7 @@ import { Meteors } from "./ui/meteors";
 import { Slider } from "./ui/slider";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "next-auth/react";
+import { generateUserHash } from "@/lib/crypto";
 
 interface DishCardProps {
   dishName: string;
@@ -40,6 +41,7 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
   const [rating, setRating] = useState<number[]>([5]);
   const [hasRated, setHasRated] = useState(false);
   const [averageRating, setAverageRating] = useState<number | null>(null);
+  const [totalVotes, setTotalVotes] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,10 +50,12 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
     if (!session?.user?.email) return;
 
     try {
+      const userHash = generateUserHash(session.user.email, dishName, mealType, date);
+      
       const { data, error } = await supabase
         .from('ratings')
         .select('rating')
-        .eq('user_email', session.user.email)
+        .eq('user_hash', userHash)
         .eq('dish_name', dishName)
         .eq('meal_type', mealType)
         .eq('date', date)
@@ -90,8 +94,10 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
       if (data && data.length > 0) {
         const avg = data.reduce((sum, item) => sum + item.rating, 0) / data.length;
         setAverageRating(Math.round(avg * 10) / 10);
+        setTotalVotes(data.length);
       } else {
         setAverageRating(null);
+        setTotalVotes(0);
       }
     } catch (err) {
       console.error('Unexpected error fetching average rating:', err);
@@ -127,16 +133,18 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
     setError(null);
 
     try {
+      const userHash = generateUserHash(session.user.email, dishName, mealType, date);
+
       const { error } = await supabase
         .from('ratings')
         .upsert({
-          user_email: session.user.email,
+          user_hash: userHash,
           dish_name: dishName,
           meal_type: mealType,
           rating: rating[0],
           date: date,
         }, {
-          onConflict: 'user_email,dish_name,meal_type,date'
+          onConflict: 'user_hash,dish_name,meal_type,date'
         });
 
       if (error) {
@@ -167,59 +175,60 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="group relative w-full max-w-sm">
+      <div className="group relative w-full max-w-sm mx-auto">
         <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-        <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-6 h-80 flex flex-col justify-center items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-400 border-t-transparent mb-4"></div>
-          <p className="text-white/80 font-medium">Loading dish...</p>
+        <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-6 h-72 sm:h-80 flex flex-col justify-center items-center">
+          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-4 border-purple-400 border-t-transparent mb-4"></div>
+          <p className="text-white/80 font-medium text-sm sm:text-base">Loading dish...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="group relative w-full max-w-sm">
+    <div className="group relative w-full max-w-sm mx-auto">
       {/* Glowing border effect */}
       <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-3xl blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
       
       {/* Main card */}
-      <div className="relative bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 h-80 transition-all duration-300 group-hover:transform group-hover:scale-[1.02]">
+      <div className="relative bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-6 h-72 sm:h-80 transition-all duration-300 group-hover:transform group-hover:scale-[1.02]">
         {/* Dish emoji and title */}
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center border border-white/10">
-            <span className="text-2xl">{dishEmojis[dishName] || '🍽️'}</span>
+        <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
+          <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/10">
+            <span className="text-lg sm:text-2xl">{dishEmojis[dishName] || '🍽️'}</span>
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-white group-hover:text-purple-200 transition-colors">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-purple-200 transition-colors truncate">
               {dishName}
             </h3>
-            <p className="text-sm text-white/60 capitalize">
+            <p className="text-xs sm:text-sm text-white/60 capitalize">
               {mealType}
             </p>
           </div>
         </div>
 
         {/* Rating display */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-2">
-              <span className="text-white/80 text-sm font-medium">Your Rating:</span>
-              <span className={`text-lg font-bold ${getRatingColor(rating[0])}`}>
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              <span className="text-white/80 text-xs sm:text-sm font-medium">Your Rating:</span>
+              <span className={`text-base sm:text-lg font-bold ${getRatingColor(rating[0])}`}>
                 {rating[0]}/10
               </span>
             </div>
             {averageRating !== null && (
-              <div className="flex items-center space-x-2">
-                <span className="text-white/60 text-sm">Avg:</span>
-                <span className={`text-sm font-semibold ${getRatingColor(averageRating)}`}>
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <span className="text-white/60 text-xs sm:text-sm">Avg:</span>
+                <span className={`text-xs sm:text-sm font-semibold ${getRatingColor(averageRating)}`}>
                   {averageRating}/10
                 </span>
+                <span className="text-white/40 text-xs">({totalVotes})</span>
               </div>
             )}
           </div>
 
           {/* Custom Slider */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <Slider
               value={rating}
               onValueChange={setRating}
@@ -239,8 +248,8 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
 
         {/* Error message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <p className="text-red-400 text-sm text-center">{error}</p>
+          <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+            <p className="text-red-400 text-xs sm:text-sm text-center">{error}</p>
           </div>
         )}
 
@@ -250,11 +259,11 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
             <button
               onClick={submitRating}
               disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-xl sm:rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] text-sm sm:text-base"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   <span>Submitting...</span>
                 </span>
               ) : (
@@ -264,9 +273,9 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
           )}
 
           {hasRated && (
-            <div className="w-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold py-3 px-6 rounded-2xl text-center">
+            <div className="w-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-xl sm:rounded-2xl text-center text-sm sm:text-base">
               <span className="flex items-center justify-center space-x-2">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 <span>Rated!</span>
@@ -275,14 +284,14 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
           )}
 
           {status === 'unauthenticated' && (
-            <div className="w-full bg-amber-500/20 border border-amber-500/30 text-amber-400 font-semibold py-3 px-6 rounded-2xl text-center">
+            <div className="w-full bg-amber-500/20 border border-amber-500/30 text-amber-400 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-xl sm:rounded-2xl text-center text-sm sm:text-base">
               Sign in to rate
             </div>
           )}
         </div>
 
         {/* Meteors effect */}
-        <Meteors number={8} />
+        <Meteors number={6} />
       </div>
     </div>
   );
