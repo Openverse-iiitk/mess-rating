@@ -178,9 +178,13 @@ export default function Home() {
               <span className="font-semibold">IIIT Kottayam</span>
             </div>
             <div className="flex items-center justify-center space-x-2 text-xs sm:text-sm text-white/60">
-              <span>Powered by</span>
-              <span className="font-semibold text-purple-400">Openverse</span>
+              <span>made with</span>
               <span className="text-red-400">❤️</span>
+              <span>by</span>
+              <div className="flex items-center space-x-1">
+                <img src="/openverse2.svg" alt="Openverse" className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="font-semibold text-purple-400">openverse</span>
+              </div>
             </div>
             <div className="text-xs text-white/40">
               Anonymous • Secure • Impactful
