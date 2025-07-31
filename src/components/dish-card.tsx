@@ -12,6 +12,29 @@ interface DishCardProps {
   date: string;
 }
 
+// Food emojis for different dishes
+const dishEmojis: { [key: string]: string } = {
+  'Idly': '🍘',
+  'Dosa': '🥞',
+  'Sambar': '🍲',
+  'Chutney': '🥄',
+  'Rice': '🍚',
+  'Dal Tadka': '🍛',
+  'Dal': '🍛',
+  'Rasam': '🍲',
+  'Vegetable Curry': '🥘',
+  'Tea': '🍵',
+  'Biscuits': '🍪',
+  'Namkeen': '🥨',
+  'Chapati': '🫓',
+  'Paneer Curry': '🧀',
+  'Pickle': '🥒',
+  'Biryani': '🍛',
+  'Pulisherry': '🥘',
+  'Punjabi': '🍛',
+  'Tadka': '✨'
+};
+
 export function DishCard({ dishName, mealType, date }: DishCardProps) {
   const { data: session, status } = useSession();
   const [rating, setRating] = useState<number[]>([5]);
@@ -32,9 +55,9 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
         .eq('dish_name', dishName)
         .eq('meal_type', mealType)
         .eq('date', date)
-        .maybeSingle(); // Use maybeSingle to avoid errors when no data found
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      if (error && error.code !== 'PGRST116') {
         console.error('Error fetching user rating:', error);
         setError('Failed to load your rating');
         return;
@@ -80,7 +103,6 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
     setError(null);
     
     try {
-      // Fetch both user rating and average rating concurrently
       await Promise.all([
         fetchUserRating(),
         fetchAverageRating()
@@ -91,7 +113,6 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
   }, [fetchUserRating, fetchAverageRating]);
 
   useEffect(() => {
-    // Only load data when session is authenticated
     if (status === 'authenticated') {
       loadData();
     } else if (status === 'unauthenticated') {
@@ -125,7 +146,6 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
       }
 
       setHasRated(true);
-      // Refresh average rating after successful submission
       await fetchAverageRating();
       
     } catch (err) {
@@ -136,95 +156,133 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
     }
   };
 
+  // Get rating color based on value
+  const getRatingColor = (rating: number) => {
+    if (rating >= 8) return 'text-emerald-400';
+    if (rating >= 6) return 'text-yellow-400';
+    if (rating >= 4) return 'text-orange-400';
+    return 'text-red-400';
+  };
+
   // Show loading state
   if (isLoading) {
     return (
-      <div className="relative w-full max-w-xs">
-        <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-blue-500 to-teal-500 transform scale-[0.80] bg-red-500 rounded-full blur-3xl" />
-        <div className="relative shadow-xl bg-gray-900 border border-gray-800 px-4 py-8 h-full overflow-hidden rounded-2xl flex flex-col justify-center items-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-          <p className="text-white mt-2">Loading...</p>
+      <div className="group relative w-full max-w-sm">
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+        <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-6 h-80 flex flex-col justify-center items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-400 border-t-transparent mb-4"></div>
+          <p className="text-white/80 font-medium">Loading dish...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full max-w-xs">
-      <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-blue-500 to-teal-500 transform scale-[0.80] bg-red-500 rounded-full blur-3xl" />
-      <div className="relative shadow-xl bg-gray-900 border border-gray-800 px-4 py-8 h-full overflow-hidden rounded-2xl flex flex-col justify-end items-start">
-        <div className="h-5 w-5 rounded-full border flex items-center justify-center mb-4 border-gray-500">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            className="h-2 w-2 text-gray-300"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M4.5 4.5l15 15m0 0V8.25m0 11.25H8.25"
-            />
-          </svg>
+    <div className="group relative w-full max-w-sm">
+      {/* Glowing border effect */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-3xl blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
+      
+      {/* Main card */}
+      <div className="relative bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 h-80 transition-all duration-300 group-hover:transform group-hover:scale-[1.02]">
+        {/* Dish emoji and title */}
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center border border-white/10">
+            <span className="text-2xl">{dishEmojis[dishName] || '🍽️'}</span>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white group-hover:text-purple-200 transition-colors">
+              {dishName}
+            </h3>
+            <p className="text-sm text-white/60 capitalize">
+              {mealType}
+            </p>
+          </div>
         </div>
 
-        <h1 className="font-bold text-xl text-white mb-4 relative z-50">
-          {dishName}
-        </h1>
-
-        <p className="font-normal text-base text-slate-500 mb-4 relative z-50">
-          {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
-        </p>
-
-        {error && (
-          <div className="w-full mb-4 relative z-50">
-            <p className="text-red-400 text-sm">{error}</p>
-          </div>
-        )}
-
-        <div className="w-full mb-4 relative z-50">
-          <div className="flex justify-between text-sm text-slate-400 mb-2">
-            <span>Rating: {rating[0]}/10</span>
+        {/* Rating display */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2">
+              <span className="text-white/80 text-sm font-medium">Your Rating:</span>
+              <span className={`text-lg font-bold ${getRatingColor(rating[0])}`}>
+                {rating[0]}/10
+              </span>
+            </div>
             {averageRating !== null && (
-              <span>Avg: {averageRating}/10</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-white/60 text-sm">Avg:</span>
+                <span className={`text-sm font-semibold ${getRatingColor(averageRating)}`}>
+                  {averageRating}/10
+                </span>
+              </div>
             )}
           </div>
-          <Slider
-            value={rating}
-            onValueChange={setRating}
-            max={10}
-            min={1}
-            step={1}
-            className="w-full"
-            disabled={hasRated || isSubmitting}
-          />
+
+          {/* Custom Slider */}
+          <div className="space-y-3">
+            <Slider
+              value={rating}
+              onValueChange={setRating}
+              max={10}
+              min={1}
+              step={1}
+              className="w-full"
+              disabled={hasRated || isSubmitting}
+            />
+            <div className="flex justify-between text-xs text-white/40">
+              <span>Poor</span>
+              <span>Average</span>
+              <span>Excellent</span>
+            </div>
+          </div>
         </div>
 
-        {!hasRated && status === 'authenticated' && (
-          <button
-            onClick={submitRating}
-            disabled={isSubmitting}
-            className="border px-4 py-1 rounded-lg border-gray-500 text-gray-300 hover:bg-gray-800 transition-colors relative z-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Rating'}
-          </button>
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+            <p className="text-red-400 text-sm text-center">{error}</p>
+          </div>
         )}
 
-        {hasRated && (
-          <p className="text-green-400 text-sm relative z-50">
-            ✓ You've rated this dish
-          </p>
-        )}
+        {/* Action button / Status */}
+        <div className="mt-auto">
+          {!hasRated && status === 'authenticated' && (
+            <button
+              onClick={submitRating}
+              disabled={isSubmitting}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              {isSubmitting ? (
+                <span className="flex items-center justify-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Submitting...</span>
+                </span>
+              ) : (
+                'Submit Rating'
+              )}
+            </button>
+          )}
 
-        {status === 'unauthenticated' && (
-          <p className="text-yellow-400 text-sm relative z-50">
-            Sign in to rate
-          </p>
-        )}
+          {hasRated && (
+            <div className="w-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold py-3 px-6 rounded-2xl text-center">
+              <span className="flex items-center justify-center space-x-2">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <span>Rated!</span>
+              </span>
+            </div>
+          )}
 
-        <Meteors number={15} />
+          {status === 'unauthenticated' && (
+            <div className="w-full bg-amber-500/20 border border-amber-500/30 text-amber-400 font-semibold py-3 px-6 rounded-2xl text-center">
+              Sign in to rate
+            </div>
+          )}
+        </div>
+
+        {/* Meteors effect */}
+        <Meteors number={8} />
       </div>
     </div>
   );
