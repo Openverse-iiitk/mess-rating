@@ -11,6 +11,7 @@ interface DishCardProps {
   dishName: string;
   mealType: 'breakfast' | 'lunch' | 'snacks' | 'dinner';
   date: string;
+  disabled?: boolean;
 }
 
 // Food emojis for different dishes
@@ -36,7 +37,7 @@ const dishEmojis: { [key: string]: string } = {
   'Tadka': '✨'
 };
 
-export function DishCard({ dishName, mealType, date }: DishCardProps) {
+export function DishCard({ dishName, mealType, date, disabled = false }: DishCardProps) {
   const { data: session, status } = useSession();
   const [rating, setRating] = useState<number[]>([5]);
   const [hasRated, setHasRated] = useState(false);
@@ -47,7 +48,7 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUserRating = useCallback(async () => {
-    if (!session?.user?.email) return;
+    if (!session?.user?.email || disabled) return;
 
     try {
       const userHash = generateUserHash(session.user.email, dishName, mealType, date);
@@ -75,9 +76,11 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
       console.error('Unexpected error fetching user rating:', err);
       setError('Failed to load your rating');
     }
-  }, [session?.user?.email, dishName, mealType, date]);
+  }, [session?.user?.email, dishName, mealType, date, disabled]);
 
   const fetchAverageRating = useCallback(async () => {
+    if (disabled) return;
+    
     try {
       const { data, error } = await supabase
         .from('ratings')
@@ -102,9 +105,14 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
     } catch (err) {
       console.error('Unexpected error fetching average rating:', err);
     }
-  }, [dishName, mealType, date]);
+  }, [dishName, mealType, date, disabled]);
 
   const loadData = useCallback(async () => {
+    if (disabled) {
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     
@@ -116,18 +124,18 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchUserRating, fetchAverageRating]);
+  }, [fetchUserRating, fetchAverageRating, disabled]);
 
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (status === 'authenticated' && !disabled) {
       loadData();
-    } else if (status === 'unauthenticated') {
+    } else if (status === 'unauthenticated' || disabled) {
       setIsLoading(false);
     }
-  }, [status, loadData]);
+  }, [status, loadData, disabled]);
 
   const submitRating = async () => {
-    if (!session?.user?.email || isSubmitting || hasRated) return;
+    if (!session?.user?.email || isSubmitting || hasRated || disabled) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -186,12 +194,20 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
   }
 
   return (
-    <div className="group relative w-full max-w-sm mx-auto">
+    <div className={`group relative w-full max-w-sm mx-auto ${disabled ? 'opacity-60' : ''}`}>
       {/* Glowing border effect */}
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-3xl blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
+      <div className={`absolute -inset-0.5 rounded-3xl blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200 ${
+        disabled 
+          ? 'bg-gradient-to-r from-gray-600 to-slate-600' 
+          : 'bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600'
+      }`}></div>
       
       {/* Main card */}
-      <div className="relative bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-6 h-72 sm:h-80 transition-all duration-300 group-hover:transform group-hover:scale-[1.02]">
+      <div className={`relative backdrop-blur-xl border rounded-3xl p-4 sm:p-6 h-72 sm:h-80 transition-all duration-300 ${
+        disabled 
+          ? 'bg-slate-900/60 border-gray-600/30' 
+          : 'bg-slate-900/80 border-white/10 group-hover:transform group-hover:scale-[1.02]'
+      }`}>
         {/* Dish emoji and title */}
         <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
           <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/10">
@@ -236,7 +252,7 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
               min={1}
               step={1}
               className="w-full"
-              disabled={hasRated || isSubmitting}
+              disabled={hasRated || isSubmitting || disabled}
             />
             <div className="flex justify-between text-xs text-white/40">
               <span>Poor</span>
@@ -255,7 +271,7 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
 
         {/* Action button / Status */}
         <div className="mt-auto">
-          {!hasRated && status === 'authenticated' && (
+          {!hasRated && status === 'authenticated' && !disabled && (
             <button
               onClick={submitRating}
               disabled={isSubmitting}
@@ -286,6 +302,12 @@ export function DishCard({ dishName, mealType, date }: DishCardProps) {
           {status === 'unauthenticated' && (
             <div className="w-full bg-amber-500/20 border border-amber-500/30 text-amber-400 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-xl sm:rounded-2xl text-center text-sm sm:text-base">
               Sign in to rate
+            </div>
+          )}
+
+          {disabled && (
+            <div className="w-full bg-gray-600/20 border border-gray-600/30 text-gray-400 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-xl sm:rounded-2xl text-center text-sm sm:text-base">
+              Meal not available
             </div>
           )}
         </div>
