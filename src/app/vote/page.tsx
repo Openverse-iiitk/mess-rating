@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { PointerHighlight } from "@/components/ui/pointer-highlight";
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
 import { DishCard } from "@/components/dish-card";
-import { MEAL_TIMES, isMealAvailable, type MealType } from "@/lib/time";
 
 const dishes = [
   { text: "Idly", className: "text-emerald-400 dark:text-emerald-400" },
@@ -20,10 +19,55 @@ const dishes = [
 ];
 
 const todaysMenu = {
-  breakfast: ["Idly", "Dosa", "Sambar", "Chutney"],
-  lunch: ["Rice", "Dal Tadka", "Sambar", "Rasam", "Vegetable Curry"],
-  snacks: ["Tea", "Biscuits", "Namkeen"],
-  dinner: ["Chapati", "Rice", "Paneer Curry", "Dal", "Pickle"]
+  breakfast: [
+    "Vada Pav",
+    "Puttu",
+    "Channa Curry",
+    "Fried Chillies",
+    "Onions",
+    "Green Chutney",
+    "Red Powdered Chutney",
+    "Bread (Normal/Brown)",
+    "Jam",
+    "Butter",
+    "Tea",
+    "Milk",
+    "Banana"
+  ],
+  lunch: [
+    "Jeera Rice",
+    "White Rice",
+    "Roti",
+    "Potato curry",
+    "Mulaku Kondattam",
+    "Rajma Curry",
+    "Fryums",
+    "Pulissery",
+    "Curd",
+    "Salad",
+    "Fruit: Seasonal Fruit"
+  ],
+  snacks: [
+    "Bhelpuri",
+    "Bread",
+    "Jam",
+    "Butter",
+    "Tea",
+    "Milk"
+  ],
+  dinner: [
+    "Rice",
+    "Roti",
+    "Soya chunk curry (Small)",
+    "Beetroot Dry",
+    "Palak Dal tadka",
+    "Cabbage chutney",
+    "Pepper Rasam",
+    "Chips",
+    "Curd",
+    "Salad",
+    "Sweet: Ada Payasam"
+  ]
 };
 
 const mealIcons = {
@@ -155,45 +199,34 @@ export default function VotePage() {
             </div>
           </div>
 
-          {/* Menu Sections with Modern Cards - Show all meals with availability status */}
+          {/* Menu Sections with Modern Cards */}
           <div className="space-y-12 sm:space-y-16">
-            {Object.entries(todaysMenu).map(([mealType, items]) => {
-              const isAvailable = isMealAvailable(mealType as MealType);
-              const mealTime = MEAL_TIMES[mealType as MealType];
-
-              return (
-                <div key={mealType} className="group">
-                  {/* Meal Type Header */}
-                  <div className="text-center mb-8 sm:mb-12">
-                    <div className="inline-flex items-center space-x-2 sm:space-x-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-full px-4 py-2 sm:px-8 sm:py-4 border border-white/20 mb-4 sm:mb-6 mx-4">
-                      <span className="text-2xl sm:text-4xl">{mealIcons[mealType as keyof typeof mealIcons]}</span>
-                      <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-white capitalize tracking-wide">
-                        {mealType}
-                      </h2>
-                      {!isAvailable && (
-                        <span className="text-xs font-medium text-gray-400">
-                          Opens {mealTime.start}
-                        </span>
-                      )}
-                    </div>
-                    <div className="w-20 sm:w-32 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto"></div>
+            {Object.entries(todaysMenu).map(([mealType, items]) => (
+              <div key={mealType} className="group">
+                {/* Meal Type Header */}
+                <div className="text-center mb-8 sm:mb-12">
+                  <div className="inline-flex items-center space-x-2 sm:space-x-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-full px-4 py-2 sm:px-8 sm:py-4 border border-white/20 mb-4 sm:mb-6 mx-4">
+                    <span className="text-2xl sm:text-4xl">{mealIcons[mealType as keyof typeof mealIcons]}</span>
+                    <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-white capitalize tracking-wide">
+                      {mealType}
+                    </h2>
                   </div>
-
-                  {/* Dish Cards Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8 justify-items-center px-4">
-                    {items.map((dish, index) => (
-                      <DishCard
-                        key={`${mealType}-${dish}-${index}`}
-                        dishName={dish}
-                        mealType={mealType as 'breakfast' | 'lunch' | 'snacks' | 'dinner'}
-                        date={currentDate}
-                        disabled={!isAvailable}
-                      />
-                    ))}
-                  </div>
+                  <div className="w-20 sm:w-32 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto"></div>
                 </div>
-              );
-            })}
+
+                {/* Dish Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8 justify-items-center px-4">
+                  {items.map((dish, index) => (
+                    <DishCard
+                      key={`${mealType}-${dish}-${index}`}
+                      dishName={dish}
+                      mealType={mealType as 'breakfast' | 'lunch' | 'snacks' | 'dinner'}
+                      date={currentDate}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Bottom Footer with Openverse Branding */}
