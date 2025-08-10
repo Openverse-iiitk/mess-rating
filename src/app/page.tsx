@@ -2,16 +2,30 @@
 
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { getCurrentDayMenu, getCurrentMealDishes, getMealTypeForTime } from "@/data/menu";
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [currentMealDishes, setCurrentMealDishes] = useState<string[]>([]);
+  const [currentMeal, setCurrentMeal] = useState<string>("");
+  const [currentDay, setCurrentDay] = useState<string>("");
 
   useEffect(() => {
     if (status === "authenticated") {
       router.push("/vote");
     }
+    
+    // Get current meal information
+    const dishes = getCurrentMealDishes();
+    const mealType = getMealTypeForTime();
+    const today = new Date();
+    const dayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+    
+    setCurrentMealDishes(dishes.slice(0, 4)); // Show only first 4 dishes
+    setCurrentMeal(mealType);
+    setCurrentDay(dayName);
   }, [status, router]);
 
   const handleGoogleSignIn = () => {
@@ -168,6 +182,35 @@ export default function Home() {
               <p className="text-white/60 text-xs sm:text-sm">Help improve dining experience for everyone</p>
             </div>
           </div>
+
+          {/* Today's Menu Preview */}
+          {currentMealDishes.length > 0 && (
+            <div className="mt-12 sm:mt-16 max-w-4xl w-full px-4">
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 sm:p-8">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                    Today's {currentMeal.charAt(0).toUpperCase() + currentMeal.slice(1)} Menu
+                  </h3>
+                  <p className="text-white/70 text-sm sm:text-base">{currentDay}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                  {currentMealDishes.map((dish, index) => (
+                    <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-white/20 text-center">
+                      <div className="text-2xl sm:text-3xl mb-2">🍽️</div>
+                      <p className="text-white text-xs sm:text-sm font-medium leading-tight">{dish}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-center mt-6">
+                  <p className="text-white/60 text-xs sm:text-sm">
+                    Sign in to rate all dishes for today's menu
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

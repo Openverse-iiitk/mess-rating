@@ -6,60 +6,9 @@ import { useEffect, useState } from "react";
 import { PointerHighlight } from "@/components/ui/pointer-highlight";
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
 import { DishCard } from "@/components/dish-card";
+import { getCurrentDayMenu, getMealTypeForTime } from "@/data/menu";
 
 
-
-const todaysMenu = {
-  breakfast: [
-    "Vada Pav",
-    "Puttu",
-    "Channa Curry",
-    "Fried Chillies",
-    "Onions",
-    "Green Chutney",
-    "Red Powdered Chutney",
-    "Bread (Normal/Brown)",
-    "Jam",
-    "Butter",
-    "Tea",
-    "Milk",
-    "Banana"
-  ],
-  lunch: [
-    "Jeera Rice",
-    "White Rice",
-    "Roti",
-    "Potato curry",
-    "Mulaku Kondattam",
-    "Rajma Curry",
-    "Fryums",
-    "Pulissery",
-    "Curd",
-    "Salad",
-    "Fruit: Seasonal Fruit"
-  ],
-  snacks: [
-    "Bhelpuri",
-    "Bread",
-    "Jam",
-    "Butter",
-    "Tea",
-    "Milk"
-  ],
-  dinner: [
-    "Rice",
-    "Roti",
-    "Soya chunk curry (Small)",
-    "Beetroot Dry",
-    "Palak Dal tadka",
-    "Cabbage chutney",
-    "Pepper Rasam",
-    "Chips",
-    "Curd",
-    "Salad",
-    "Sweet: Ada Payasam"
-  ]
-};
 
 const mealIcons = {
   breakfast: "🌅",
@@ -72,12 +21,22 @@ export default function VotePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState("");
+  const [todaysMenu, setTodaysMenu] = useState<any>(null);
+  const [currentMeal, setCurrentMeal] = useState<string>("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/");
     }
     setCurrentDate(new Date().toISOString().split('T')[0]);
+    
+    // Get today's menu
+    const menu = getCurrentDayMenu();
+    setTodaysMenu(menu);
+    
+    // Get current meal type
+    const mealType = getMealTypeForTime();
+    setCurrentMeal(mealType);
   }, [status, router]);
 
   if (status === "loading") {
@@ -163,16 +122,25 @@ export default function VotePage() {
             </div>
 
             {/* Date Display */}
-            <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 sm:px-6 sm:py-3 border border-white/20 mx-4">
-              <span className="text-lg sm:text-2xl">📅</span>
-              <span className="text-white font-medium text-sm sm:text-base">
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </span>
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 px-4">
+              <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 sm:px-6 sm:py-3 border border-white/20">
+                <span className="text-lg sm:text-2xl">📅</span>
+                <span className="text-white font-medium text-sm sm:text-base">
+                  {new Date().toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </span>
+              </div>
+              
+              <a
+                href="/weekly-menu"
+                className="inline-flex items-center space-x-2 bg-purple-500/20 hover:bg-purple-500/30 backdrop-blur-sm rounded-full px-4 py-2 sm:px-6 sm:py-3 border border-purple-400/30 transition-colors text-purple-300 hover:text-purple-200"
+              >
+                <span className="text-sm sm:text-base">📋 Weekly Menu</span>
+              </a>
             </div>
 
             {/* Openverse Branding */}
@@ -188,32 +156,53 @@ export default function VotePage() {
 
           {/* Menu Sections with Modern Cards */}
           <div className="space-y-12 sm:space-y-16">
-            {Object.entries(todaysMenu).map(([mealType, items]) => (
-              <div key={mealType} className="group">
-                {/* Meal Type Header */}
-                <div className="text-center mb-8 sm:mb-12">
-                  <div className="inline-flex items-center space-x-2 sm:space-x-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-full px-4 py-2 sm:px-8 sm:py-4 border border-white/20 mb-4 sm:mb-6 mx-4">
-                    <span className="text-2xl sm:text-4xl">{mealIcons[mealType as keyof typeof mealIcons]}</span>
-                    <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-white capitalize tracking-wide">
-                      {mealType}
-                    </h2>
+            {todaysMenu ? (
+              Object.entries(todaysMenu).map(([mealType, items]) => (
+                <div key={mealType} className="group">
+                  {/* Meal Type Header */}
+                  <div className="text-center mb-8 sm:mb-12">
+                    <div className={`inline-flex items-center space-x-2 sm:space-x-4 backdrop-blur-sm rounded-full px-4 py-2 sm:px-8 sm:py-4 border border-white/20 mb-4 sm:mb-6 mx-4 ${
+                      mealType === currentMeal 
+                        ? 'bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-green-400/40' 
+                        : 'bg-gradient-to-r from-purple-500/20 to-pink-500/20'
+                    }`}>
+                      <span className="text-2xl sm:text-4xl">{mealIcons[mealType as keyof typeof mealIcons]}</span>
+                      <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-white capitalize tracking-wide">
+                        {mealType}
+                      </h2>
+                      {mealType === currentMeal && (
+                        <span className="text-xs sm:text-sm bg-green-500/20 text-green-300 px-2 py-1 rounded-full border border-green-400/30">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <div className="w-20 sm:w-32 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto"></div>
                   </div>
-                  <div className="w-20 sm:w-32 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto"></div>
-                </div>
 
-                {/* Dish Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8 justify-items-center px-4">
-                  {items.map((dish, index) => (
-                    <DishCard
-                      key={`${mealType}-${dish}-${index}`}
-                      dishName={dish}
-                      mealType={mealType as 'breakfast' | 'lunch' | 'snacks' | 'dinner'}
-                      date={currentDate}
-                    />
-                  ))}
+                  {/* Dish Cards Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8 justify-items-center px-4">
+                    {(items as string[]).map((dish: string, index: number) => (
+                      <DishCard
+                        key={`${mealType}-${dish}-${index}`}
+                        dishName={dish}
+                        mealType={mealType as 'breakfast' | 'lunch' | 'snacks' | 'dinner'}
+                        date={currentDate}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 mx-4 border border-white/20">
+                  <span className="text-6xl mb-4 block">🍽️</span>
+                  <h3 className="text-2xl font-bold text-white mb-4">No Menu Available</h3>
+                  <p className="text-white/70">
+                    Menu data for today is not available. Please check back later or contact the mess administration.
+                  </p>
                 </div>
               </div>
-            ))}
+            )}
           </div>
 
           {/* Bottom Footer with Openverse Branding */}
