@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "./providers";
+import FloatingCockroach from "@/components/floating-cockroach";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({
       >
         <SessionProvider>
           {children}
+          <FloatingCockroach />
         </SessionProvider>
       </body>
     </html>
