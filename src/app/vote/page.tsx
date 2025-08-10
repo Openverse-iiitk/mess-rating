@@ -7,16 +7,7 @@ import { PointerHighlight } from "@/components/ui/pointer-highlight";
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
 import { DishCard } from "@/components/dish-card";
 
-const dishes = [
-  { text: "Idly", className: "text-emerald-400 dark:text-emerald-400" },
-  { text: "Dosa", className: "text-amber-400 dark:text-amber-400" },
-  { text: "Biryani", className: "text-orange-400 dark:text-orange-400" },
-  { text: "Pulisherry", className: "text-lime-400 dark:text-lime-400" },
-  { text: "Sambar", className: "text-rose-400 dark:text-rose-400" },
-  { text: "Punjabi", className: "text-violet-400 dark:text-violet-400" },
-  { text: "Dal", className: "text-pink-400 dark:text-pink-400" },
-  { text: "Tadka", className: "text-cyan-400 dark:text-cyan-400" },
-];
+
 
 const todaysMenu = {
   breakfast: [
@@ -167,11 +158,7 @@ export default function VotePage() {
             
             <div className="flex justify-center mb-4 sm:mb-8 px-4">
               <div className="w-full max-w-2xl">
-                <TypewriterEffectSmooth
-                  words={dishes}
-                  className="text-white"
-                  cursorClassName="bg-purple-400"
-                />
+                
               </div>
             </div>
 

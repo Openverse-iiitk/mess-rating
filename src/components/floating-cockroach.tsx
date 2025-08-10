@@ -101,7 +101,7 @@ export default function FloatingCockroach() {
       title="View bad mess images"
     >
       <Link href="/bad-mess" className="block">
-        <div className="relative w-12 h-12 drop-shadow-lg">
+        <div className="relative w-20 h-20 drop-shadow-lg">
           <Image
             src="/fat-cockroach-eating-cookie-vector-600nw-1618836004.png"
             alt="Report bad mess"
