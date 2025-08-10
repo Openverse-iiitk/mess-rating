@@ -64,7 +64,6 @@ export function DishCard({ dishName, mealType, date, disabled = false }: DishCar
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching user rating:', error);
-        setError('Failed to load your rating');
         return;
       }
 
@@ -74,12 +73,11 @@ export function DishCard({ dishName, mealType, date, disabled = false }: DishCar
       }
     } catch (err) {
       console.error('Unexpected error fetching user rating:', err);
-      setError('Failed to load your rating');
     }
   }, [session?.user?.email, dishName, mealType, date, disabled]);
 
   const fetchAverageRating = useCallback(async () => {
-    if (disabled) return;
+  if (disabled) { return; }
     
     try {
       const { data, error } = await supabase
@@ -135,7 +133,7 @@ export function DishCard({ dishName, mealType, date, disabled = false }: DishCar
   }, [status, loadData, disabled]);
 
   const submitRating = async () => {
-    if (!session?.user?.email || isSubmitting || hasRated || disabled) return;
+  if (!session?.user?.email || isSubmitting || hasRated || disabled) { return; }
 
     setIsSubmitting(true);
     setError(null);
@@ -174,9 +172,9 @@ export function DishCard({ dishName, mealType, date, disabled = false }: DishCar
 
   // Get rating color based on value
   const getRatingColor = (rating: number) => {
-    if (rating >= 8) return 'text-emerald-400';
-    if (rating >= 6) return 'text-yellow-400';
-    if (rating >= 4) return 'text-orange-400';
+  if (rating >= 8) { return 'text-emerald-400'; }
+  if (rating >= 6) { return 'text-yellow-400'; }
+  if (rating >= 4) { return 'text-orange-400'; }
     return 'text-red-400';
   };
 
@@ -262,12 +260,7 @@ export function DishCard({ dishName, mealType, date, disabled = false }: DishCar
           </div>
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <p className="text-red-400 text-xs sm:text-sm text-center">{error}</p>
-          </div>
-        )}
+  {/* Error message removed */}
 
         {/* Action button / Status */}
         <div className="mt-auto">
